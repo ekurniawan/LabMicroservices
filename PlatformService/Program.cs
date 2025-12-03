@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using PlatformService.Data;
+using PlatformService.Http;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -15,6 +16,9 @@ builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
 
 //add repository
 builder.Services.AddScoped<IPlatformRepo, PlatformRepo>();
+
+//add httpclient
+builder.Services.AddHttpClient<ICommandDataClient, HttpCommandDataClient>();
 
 //add dbcontext
 builder.Services.AddDbContext<AppDbContext>(opt => opt.UseInMemoryDatabase("InMem"));

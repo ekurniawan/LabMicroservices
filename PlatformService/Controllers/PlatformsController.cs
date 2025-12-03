@@ -6,6 +6,7 @@ using AutoMapper;
 using Microsoft.AspNetCore.Mvc;
 using PlatformService.Data;
 using PlatformService.Dtos;
+using PlatformService.Http;
 using PlatformService.Models;
 
 namespace PlatformService.Controllers
@@ -16,11 +17,13 @@ namespace PlatformService.Controllers
     {
         private readonly IPlatformRepo _platformRepo;
         private readonly IMapper _mapper;
-
-        public PlatformsController(IPlatformRepo platformRepo, IMapper mapper)
+        private readonly ICommandDataClient _commandDataClient;
+        public PlatformsController(IPlatformRepo platformRepo, IMapper mapper,
+         ICommandDataClient commandDataClient)
         {
             _platformRepo = platformRepo;
             _mapper = mapper;
+            _commandDataClient = commandDataClient;
         }
 
         [HttpGet]
@@ -44,11 +47,13 @@ namespace PlatformService.Controllers
         }
 
         [HttpPost]
-        public ActionResult<PlatformReadDto> CreatePlatform(PlatformCreateDto platformCreateDto)
+        public async Task<ActionResult<PlatformReadDto>> CreatePlatform(PlatformCreateDto platformCreateDto)
         {
             var platformModel = _mapper.Map<Platform>(platformCreateDto);
             _platformRepo.CreatePlatform(platformModel);
             _platformRepo.SaveChanges();
+
+            await _commandDataClient.SendPlatformToCommand(_mapper.Map<PlatformReadDto>(platformModel));
 
             var platformReadDto = _mapper.Map<PlatformReadDto>(platformModel);
 
