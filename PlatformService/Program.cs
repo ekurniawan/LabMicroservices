@@ -28,7 +28,20 @@ builder.Services.AddHttpClient<ICommandDataClient, HttpCommandDataClient>().AddT
 ).AddPolicyHandler(Policy.TimeoutAsync<HttpResponseMessage>(5));
 
 //add dbcontext
-builder.Services.AddDbContext<AppDbContext>(opt => opt.UseInMemoryDatabase("InMem"));
+
+if (builder.Environment.IsProduction())
+{
+    Console.WriteLine("--> Using MSSQL Db");
+    builder.Services.AddDbContext<AppDbContext>(opt =>
+        opt.UseSqlServer(builder.Configuration.GetConnectionString("PlatformsConn")));
+}
+else
+{
+    Console.WriteLine("--> Using InMem Db");
+    builder.Services.AddDbContext<AppDbContext>(opt =>
+        opt.UseInMemoryDatabase("InMem"));
+}
+
 
 var app = builder.Build();
 
@@ -45,6 +58,6 @@ app.UseAuthorization();
 
 app.MapControllers();
 
-PrepDb.PrepPopulation(app);
+PrepDb.PrepPopulation(app, app.Environment.IsProduction());
 
 app.Run();
