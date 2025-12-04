@@ -1,6 +1,8 @@
 using Microsoft.EntityFrameworkCore;
 using PlatformService.Data;
 using PlatformService.Http;
+using Polly;
+using Polly.Timeout;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -18,7 +20,12 @@ builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
 builder.Services.AddScoped<IPlatformRepo, PlatformRepo>();
 
 //add httpclient
-builder.Services.AddHttpClient<ICommandDataClient, HttpCommandDataClient>();
+builder.Services.AddHttpClient<ICommandDataClient, HttpCommandDataClient>().AddTransientHttpErrorPolicy(policyBuilder =>
+    policyBuilder.Or<TimeoutRejectedException>().WaitAndRetryAsync(3, retryAttempt =>
+        TimeSpan.FromSeconds(Math.Pow(2, retryAttempt))
+    )).AddTransientHttpErrorPolicy(policyBuilder =>
+    policyBuilder.Or<TimeoutRejectedException>().CircuitBreakerAsync(5, TimeSpan.FromSeconds(30))
+).AddPolicyHandler(Policy.TimeoutAsync<HttpResponseMessage>(5));
 
 //add dbcontext
 builder.Services.AddDbContext<AppDbContext>(opt => opt.UseInMemoryDatabase("InMem"));
