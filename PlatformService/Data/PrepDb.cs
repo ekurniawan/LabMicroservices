@@ -31,6 +31,15 @@ namespace PlatformService.Data
                 }
             }
 
+            try
+            {
+                context.Database.EnsureCreated();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"--> Could not ensure database created: {ex.Message}");
+            }
+
             if (!context.Platforms.Any())
             {
                 Console.WriteLine("Seeding Data...");
