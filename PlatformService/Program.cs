@@ -43,6 +43,8 @@ else
         opt.UseInMemoryDatabase("InMem"));
 }
 
+
+
 builder.Services.AddSingleton<IMessageBusClient, MessageBusClient>();
 
 
