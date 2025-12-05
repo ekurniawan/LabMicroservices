@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using PlatformService.AsyncDataServices;
 using PlatformService.Data;
 using PlatformService.Http;
 using Polly;
@@ -41,6 +42,8 @@ else
     builder.Services.AddDbContext<AppDbContext>(opt =>
         opt.UseInMemoryDatabase("InMem"));
 }
+
+builder.Services.AddSingleton<IMessageBusClient, MessageBusClient>();
 
 
 var app = builder.Build();
